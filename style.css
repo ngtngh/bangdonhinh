@@ -1,0 +1,17 @@
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; padding: 20px; color: #333; max-width: 1000px; margin: 0 auto; }
+h1, h2 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+.setup-panel { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+input[type="number"], input[type="text"] { padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
+button { background: #3498db; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: background 0.3s; margin: 5px; }
+button:hover { background: #2980b9; }
+
+.simplex-table { border-collapse: collapse; margin-bottom: 30px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.simplex-table th, .simplex-table td { border: 1px solid #000; padding: 12px 20px; text-align: center; min-width: 60px; }
+.simplex-table th { background-color: #f1f1f1; font-weight: bold; font-style: italic; }
+.pivot-element { background-color: #ffeaa7; font-weight: bold; }
+.step-title { font-weight: bold; margin-top: 20px; color: #e67e22; }
+
+#inputGrid { overflow-x: auto; margin-bottom: 20px; }
+.input-cell { width: 60px; }
+.status-optimal { color: #27ae60; font-weight: bold; font-size: 1.2em;}
+.status-unbounded { color: #c0392b; font-weight: bold; font-size: 1.2em;}

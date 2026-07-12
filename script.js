@@ -121,9 +121,9 @@ function startSolving() {
             // Kiểm tra vô số nghiệm (nếu có -cj = 0 cho biến ngoài cơ sở)
             let hasZeroC = T.c.some(cj => cj.isZero());
             if (hasZeroC) {
-                output.innerHTML += '<p class="status-optimal">Bảng đã tối ưu! Bài toán có VÔ SỐ NGHIỆM tối ưu do có biến ngoài cơ sở có hệ số ước lượng bằng 0.</p>';
+                output.innerHTML += '<p class="status-optimal">Tồn tại biến ngoài cơ sở có hệ số bằng 0. Bài toán có VÔ SỐ nghiệm tối ưu.</p>';
             } else {
-                output.innerHTML += '<p class="status-optimal">Bảng đã tối ưu! Bài toán có NGHIỆM DUY NHẤT.</p>';
+                output.innerHTML += '<p class="status-optimal">Hệ số các biến ngoài cơ sở đều dương. Bài toán có nghiệm tối ưu DUY NHẤT.</p>';
             }
             break;
         }
@@ -144,7 +144,7 @@ function startSolving() {
         // Kiểm tra không bị chặn
         if (pRow === -1) {
             renderTableau(T, iteration, -1, pCol);
-            output.innerHTML += '<p class="status-unbounded">Bảng không tối ưu nhưng không tìm được phần tử xoay (tất cả a_ij ≤ 0). Bài toán KHÔNG BỊ CHẶN (Unbounded).</p>';
+            output.innerHTML += '<p class="status-unbounded">Tồn tại cột xoay chứa các hệ số không dương. Hàm mục tiêu KHÔNG BỊ CHẶN.</p>';
             break;
         }
 
@@ -213,24 +213,22 @@ function pivot(T, pRow, pCol) {
 
 function renderTableau(T, iter, pRow, pCol) {
     const output = document.getElementById('outputArea');
-    let html = `<div class="step-title">Bảng lặp thứ ${iter}:</div>`;
+    let html = `<div class="step-container">`; // Mở container bọc ngoài
+    html += `<div class="step-title">Bảng lặp thứ ${iter}:</div>`;
     html += `<table class="simplex-table">`;
     
-    // Hàng đầu (f và tên biến)
     html += `<tr><th rowspan="2" colspan="2">f = ${T.f.toString()}</th>`;
     for(let j=0; j<T.nonBasicVars.length; j++) {
         html += `<th>${T.nonBasicVars[j]}</th>`;
     }
     html += `</tr><tr>`;
     
-    // Hàng -cj
     for(let j=0; j<T.nonBasicVars.length; j++) {
         let isPivotCol = (j === pCol) ? 'class="pivot-element"' : '';
         html += `<td ${isPivotCol}>${T.c[j].toString()}</td>`;
     }
     html += `</tr>`;
 
-    // Các hàng A
     for(let i=0; i<T.basicVars.length; i++) {
         html += `<tr><th>${T.basicVars[i]}</th>`;
         let isPivotRow = (i === pRow) ? 'class="pivot-element"' : '';
@@ -243,17 +241,19 @@ function renderTableau(T, iter, pRow, pCol) {
     }
     
     html += `</table>`;
+    html += `</div>`; // Đóng container bọc ngoài
+    
     output.innerHTML += html;
 }
 
 window.onload = function() { 
     generateInputGrid(); 
-    document.getElementById('val_c_0').value = "1";
-    document.getElementById('val_c_1').value = "-3";
-    document.getElementById('val_b_0').value = "25";
-    document.getElementById('val_A_0_0').value = "2";
-    document.getElementById('val_A_0_1').value = "3";
-    document.getElementById('val_b_1').value = "15";
-    document.getElementById('val_A_1_0').value = "1";
-    document.getElementById('val_A_1_1').value = "1";
+    // document.getElementById('val_c_0').value = "1";
+    // document.getElementById('val_c_1').value = "-3";
+    // document.getElementById('val_b_0').value = "25";
+    // document.getElementById('val_A_0_0').value = "2";
+    // document.getElementById('val_A_0_1').value = "3";
+    // document.getElementById('val_b_1').value = "15";
+    // document.getElementById('val_A_1_0').value = "1";
+    // document.getElementById('val_A_1_1').value = "1";
 };

@@ -1,17 +1,150 @@
-body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; padding: 20px; color: #333; max-width: 1000px; margin: 0 auto; }
-h1, h2 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-.setup-panel { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-input[type="number"], input[type="text"] { padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; text-align: center; }
-button { background: #3498db; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; font-weight: bold; transition: background 0.3s; margin: 5px; }
+/* Thiết lập chung: Căn giữa toàn bộ và tăng max-width để chứa nhiều bảng ngang */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    line-height: 1.5; 
+    padding: 10px 20px; 
+    color: #333; 
+    max-width: 1400px; /* Tăng không gian hiển thị trên màn hình lớn */
+    margin: 0 auto; 
+    text-align: center; 
+    background-color: #f4f7f6;
+}
+
+h1, h2 { 
+    color: #2c3e50; 
+    border-bottom: 2px solid #ddd; 
+    padding-bottom: 8px; 
+    margin-top: 10px;
+}
+
+/* Bảng thiết lập thông số */
+.setup-panel { 
+    background: #ffffff; 
+    padding: 10px 15px; 
+    border-radius: 8px; 
+    margin-bottom: 15px; 
+    display: inline-block; /* Để khối bọc tự động căn giữa theo body */
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+/* Các trường nhập liệu (thu gọn kích thước) */
+input[type="number"], input[type="text"] {
+    width: 60px; 
+    padding: 4px 6px; 
+    margin: 3px; 
+    border: 1px solid #ccc; 
+    border-radius: 4px; 
+    text-align: center; 
+}
+.input-cell { width: 40px; font-size: 0.95em; } /* Rút gọn độ rộng ô */
+
+/* Nút bấm */
+button { 
+    background: #3498db; 
+    color: white; 
+    border: none; 
+    padding: 8px 16px; 
+    cursor: pointer; 
+    border-radius: 4px; 
+    font-weight: bold; 
+    transition: background 0.3s; 
+    margin: 5px; 
+    font-size: 0.95em;
+}
 button:hover { background: #2980b9; }
 
-.simplex-table { border-collapse: collapse; margin-bottom: 30px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-.simplex-table th, .simplex-table td { border: 1px solid #000; padding: 12px 20px; text-align: center; min-width: 60px; }
-.simplex-table th { background-color: #f1f1f1; font-weight: bold; font-style: italic; }
-.pivot-element { background-color: #ffeaa7; font-weight: bold; }
-.step-title { font-weight: bold; margin-top: 20px; color: #e67e22; }
+/* Vùng chứa lưới nhập liệu đầu tiên */
+#inputGridContainer {
+    overflow-x: auto;
+    margin-bottom: 15px;
+}
+#inputGridContainer table {
+    margin: 0 auto; /* Căn giữa bảng nhập liệu */
+}
 
-#inputGrid { overflow-x: auto; margin-bottom: 20px; }
-.input-cell { width: 60px; }
-.status-optimal { color: #27ae60; font-weight: bold; font-size: 1.2em;}
-.status-unbounded { color: #c0392b; font-weight: bold; font-size: 1.2em;}
+/* ---------------------------------------------------- */
+/* Vùng Output: Áp dụng Flexbox để dàn ngang các bảng  */
+/* ---------------------------------------------------- */
+#outputArea {
+    display: flex;
+    flex-wrap: wrap; /* Tự động xuống dòng khi hết chỗ */
+    gap: 15px;       /* Khoảng cách giữa các bảng */
+    justify-content: center; /* Căn giữa các khối bảng */
+    align-items: flex-start;
+    margin-top: 20px;
+}
+
+#outputArea h2 {
+    width: 100%; /* Tiêu đề phải chiếm trọn 1 dòng */
+    margin-bottom: 5px;
+}
+
+.status-optimal, .status-unbounded {
+    width: 100%; /* Trạng thái kết luận chiếm trọn 1 dòng */
+    font-size: 1.1em;
+    margin: 10px 0;
+    padding: 10px;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.status-optimal { color: #27ae60; font-weight: bold; }
+.status-unbounded { color: #c0392b; font-weight: bold; }
+
+/* Bọc từng bước lặp để tạo thẻ (card) độc lập */
+.step-container {
+    background: #ffffff;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.step-title { 
+    font-weight: bold; 
+    margin-bottom: 8px; 
+    color: #d35400; 
+}
+
+/* Bảng đơn hình (Giảm padding) */
+.simplex-table { 
+    border-collapse: collapse; 
+    background: #fff; 
+}
+.simplex-table th, .simplex-table td { 
+    border: 1px solid #555; 
+    padding: 5px 8px; /* Thu hẹp lề trong ô */
+    text-align: center; 
+    min-width: 35px;  /* Thu hẹp chiều rộng tối thiểu */
+    font-size: 0.9em; /* Nhỏ chữ lại một chút */
+}
+.simplex-table th { 
+    background-color: #eaeaea; 
+    font-weight: bold; 
+    font-style: italic; 
+}
+.pivot-element { 
+    background-color: #ffeaa7; 
+    font-weight: bold; 
+}
+
+/* ---------------------------------------------------- */
+/* Responsive: Tối ưu cho thiết bị di động (Màn hình nhỏ) */
+/* ---------------------------------------------------- */
+@media (max-width: 768px) {
+    #outputArea {
+        flex-direction: column; /* Chuyển về hiển thị dọc trên điện thoại */
+        align-items: stretch;
+    }
+    .step-container {
+        width: 100%;
+        box-sizing: border-box;
+        overflow-x: auto; /* Cho phép vuốt ngang nếu bảng quá nhiều cột */
+    }
+    .simplex-table th, .simplex-table td {
+        padding: 4px 6px;
+        font-size: 0.85em;
+    }
+}

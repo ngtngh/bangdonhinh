@@ -27,6 +27,43 @@ h1, h2 {
     box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 
+.setup-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center; /* Quan trọng: căn giữa các phần tử theo trục dọc */
+    gap: 10px;
+    padding: 5px 0;      /* Thêm chút padding để không bị dính sát mép trên/dưới */
+}
+
+.setup-row label {
+    display: flex;
+    align-items: center; /* Đảm bảo văn bản và ô input đứng thẳng hàng */
+    gap: 5px;            /* Khoảng cách nhỏ giữa chữ và ô input */
+    white-space: nowrap;
+}
+
+.input-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center; /* Quan trọng: căn giữa các label */
+    gap: 10px;
+}
+
+.button-group {
+    /* Đảm bảo nút bấm luôn muốn nằm cạnh nếu có thể */
+    flex: 0 1 auto;
+}
+
+/* Logic: Khi màn hình hẹp, ép button xuống dòng thứ 3 */
+@media (max-width: 600px) {
+    .button-group {
+        flex: 1 1 100%; /* Ép chiếm 100% chiều ngang để xuống dòng hẳn */
+        text-align: center; /* Căn giữa nút */
+    }
+}
+
 /* Các trường nhập liệu (thu gọn kích thước) */
 input[type="number"], input[type="text"] {
     width: 60px; 

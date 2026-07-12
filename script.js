@@ -52,15 +52,15 @@ function generateInputGrid() {
     html += `<tr><th rowspan="2" colspan="2">f = <input type="text" id="val_f" value="0" class="input-cell"></th>`;
     for(let j=1; j<=cols; j++) html += `<th><input type="text" id="nbVar_${j-1}" value="x${j}" class="input-cell" style="font-style:italic; font-weight:bold;"></th>`;
     html += '</tr><tr>';
-    for(let j=1; j<=cols; j++) html += `<td><input type="text" id="val_c_${j-1}" placeholder="-c${j}" value="0" class="input-cell"></td>`;
+    for(let j=1; j<=cols; j++) html += `<td><input type="text" id="val_c_${j-1}" placeholder="-c${j}" value="" class="input-cell"></td>`;
     html += '</tr>';
 
     // Các dòng ràng buộc
     for(let i=1; i<=rows; i++) {
         html += `<tr><th><input type="text" id="bVar_${i-1}" value="w${i}" class="input-cell" style="font-style:italic; font-weight:bold;"></th>`;
-        html += `<td><input type="text" id="val_b_${i-1}" placeholder="b${i}" value="0" class="input-cell"></td>`;
+        html += `<td><input type="text" id="val_b_${i-1}" placeholder="b${i}" value="" class="input-cell"></td>`;
         for(let j=1; j<=cols; j++) {
-            html += `<td><input type="text" id="val_A_${i-1}_${j-1}" value="0" class="input-cell"></td>`;
+            html += `<td><input type="text" id="val_A_${i-1}_${j-1}" value="" class="input-cell"></td>`;
         }
         html += '</tr>';
     }

@@ -8,12 +8,20 @@
 </head>
 <body>
 
-    <h1>Công cụ giải bảng đơn hình (max)</h1>
+    <h1>Giải bảng đơn hình (max)</h1>
     
     <div class="setup-panel">
-        <label>Số biến ngoài cơ sở (Cột): <input type="number" id="numCols" value="2" min="1"></label>
-        <label>Số biến cơ sở (Hàng): <input type="number" id="numRows" value="2" min="1"></label>
-        <button onclick="generateInputGrid()">Tạo Bảng Nhập Liệu</button>
+        <div class="setup-row">
+            <!-- Nhóm 1: Các input -->
+            <div class="input-group">
+                <label>Số biến ngoài cơ sở (Cột): <input type="number" id="numCols" value="2" min="1"></label>
+                <label>Số biến cơ sở (Hàng): <input type="number" id="numRows" value="2" min="1"></label>
+            </div>
+            <!-- Nhóm 2: Nút bấm (Luôn muốn xuống dòng nếu nhóm 1 bị ngắt dòng) -->
+            <div class="button-group">
+                <button onclick="generateInputGrid()">Tạo Bảng Nhập Liệu</button>
+            </div>
+        </div>
     </div>
 
     <div id="inputGridContainer"></div>

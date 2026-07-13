@@ -3,33 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giải bảng đơn hình</title>
+    <title>Giải Bảng Đơn Hình & Big-M</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <main class="content">
+        <h1>Giải Bảng Đơn Hình</h1>
+        
+        <div class="tabs">
+            <button class="tab-btn" id="tab-standard" onclick="setMode('standard')">Đơn hình gốc</button>
+            <button class="tab-btn active" id="tab-bigm" onclick="setMode('bigm')">Đơn hình Big-M</button>
+        </div>
 
-    <h1>Giải bảng đơn hình (max)</h1>
-    
-    <div class="setup-panel">
-        <div class="setup-row">
-            <!-- Nhóm 1: Các input -->
-            <div class="input-group">
-                <label>Số biến ngoài cơ sở (Cột): <input type="number" id="numCols" value="2" min="1"></label>
-                <label>Số biến cơ sở (Hàng): <input type="number" id="numRows" value="2" min="1"></label>
-            </div>
-            <!-- Nhóm 2: Nút bấm (Luôn muốn xuống dòng nếu nhóm 1 bị ngắt dòng) -->
-            <div class="button-group">
-                <button onclick="generateInputGrid()">Tạo Bảng Nhập Liệu</button>
+        <div class="setup-panel">
+            <div class="setup-row">
+                <div class="input-group">
+                    <label>Số biến ngoài cơ sở (Cột): <input type="number" id="numCols" value="3" min="1"></label>
+                    <label>Số biến cơ sở (Hàng): <input type="number" id="numRows" value="3" min="1"></label>
+                </div>
+                <div class="button-group">
+                    <button onclick="generateInputGrid()">Tạo Bảng Nhập Liệu</button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="inputGridContainer"></div>
-    <div id="controls" style="display: none;">
-        <button onclick="startSolving()" style="background: #2ecc71;">Giải Bài Toán</button>
-    </div>
+        <div id="inputGridContainer"></div>
+        <div id="controls" style="display: none;">
+            <button id="solveButton" onclick="startSolving()">Giải Bảng Đơn Hình</button>
+        </div>
 
-    <div id="outputArea"></div>
+        <div id="outputArea"></div>
+    </main>
+
+    <footer>
+        <p id="note"><strong><span style="color: red;">Lưu ý:</span></strong> Công cụ chỉ giải bảng đơn hình cho bài toán max ở dạng chính tắc.</p>
+        <p>&copy; 2026 Nguyễn Tuấn Nghĩa.</p>
+    </footer>
 
     <script src="script.js"></script>
 </body>

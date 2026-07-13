@@ -1,5 +1,3 @@
-let currentMode = 'bigm'; // Mặc định chuyển sang Big-M để test
-
 function setMode(mode) {
     localStorage.setItem('simplex_mode', mode);
     currentMode = mode;

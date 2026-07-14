@@ -187,7 +187,7 @@ button:hover { background: #2980b9; }
     .button-group { flex: 1 1 100%; text-align: center; }
     .step-container { width: 100%; box-sizing: border-box; overflow-x: auto; }
     .simplex-table th, .simplex-table td { padding: 6px 10px; font-size: 0.85em; }
-    .input-cell { width: 15px; font-size: 0.95em; padding: 6px 0px; }
+    .input-cell { width: 20px; font-size: 0.95em; padding: 6px 0px; }
     .input-cell.title { width: 25px; }
 }
 

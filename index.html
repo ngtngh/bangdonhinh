@@ -13,13 +13,14 @@
         <div class="tabs">
             <button class="tab-btn" id="tab-standard" onclick="setMode('standard')">Đơn hình gốc</button>
             <button class="tab-btn" id="tab-bigm" onclick="setMode('bigm')">Đơn hình Big-M</button>
+            <button class="tab-btn" id="tab-dual" onclick="setMode('dual')">Đơn hình đối ngẫu</button>
         </div>
 
         <div class="setup-panel">
             <div class="setup-row">
                 <div class="input-group">
-                    <label>Số biến ngoài cơ sở (Cột): <input type="number" id="numCols" value="3" min="1"></label>
-                    <label>Số biến cơ sở (Hàng): <input type="number" id="numRows" value="3" min="1"></label>
+                    <label>Số biến ngoài cơ sở (Cột): <input type="number" id="numCols" onfocus="clearValue(this)" onblur="restoreValue(this)" value="3" min="1"></label>
+                    <label>Số biến cơ sở (Hàng): <input type="number" id="numRows" onfocus="clearValue(this)" onblur="restoreValue(this)" value="3" min="1"></label>
                 </div>
                 <div class="button-group">
                     <button onclick="generateInputGrid()">Tạo Bảng Nhập Liệu</button>
@@ -36,7 +37,7 @@
     </main>
 
     <footer>
-        <p id="note"><strong><span style="color: red;">Lưu ý:</span></strong> Công cụ chỉ giải bảng đơn hình cho bài toán max ở dạng chính tắc.</p>
+        <p id="note"><strong><span style="color: red;">Lưu ý:</span></strong> Công cụ chỉ giải bảng đơn hình cho <strong>bài toán max ở dạng chính tắc</strong>. Chú ý <strong>đổi dấu giá trị tối ưu</strong> nếu đã chuyển từ min thành max.</p>
         <p>&copy; 2026 Nguyễn Tuấn Nghĩa.</p>
     </footer>
 

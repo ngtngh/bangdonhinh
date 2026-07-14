@@ -1,11 +1,23 @@
+let oldValue = "";
+function clearValue(element) {
+    oldValue = element.value; // Lưu lại giá trị hiện tại
+    element.value = "";       // Xóa trắng ô input để ẩn giá trị đi
+}
+function restoreValue(element) {
+    // Nếu người dùng bỏ chọn và không nhập gì, khôi phục lại giá trị cũ
+    if (element.value === "") {
+        element.value = oldValue;
+    }
+}
+
 function setMode(mode) {
     localStorage.setItem('simplex_mode', mode);
     currentMode = mode;
     document.getElementById('tab-standard').classList.remove('active');
     document.getElementById('tab-bigm').classList.remove('active');
+    document.getElementById('tab-dual').classList.remove('active');
     document.getElementById(`tab-${mode}`).classList.add('active');
     document.getElementById('outputArea').innerHTML = '';
-    // Tự động tạo lại bảng khi chuyển đổi tab để trải nghiệm mượt mà hơn
     generateInputGrid(); 
 }
 
@@ -41,6 +53,7 @@ class BigMFrac {
     sub(o) { return new BigMFrac(this.m.sub(o.m), this.r.sub(o.r)); }
     mulFrac(f) { return new BigMFrac(this.m.mul(f), this.r.mul(f)); }
     divFrac(f) { return new BigMFrac(this.m.div(f), this.r.div(f)); }
+    neg() { return new BigMFrac(this.m.neg(), this.r.neg()); }
     
     cmp(o) {
         let mCmp = this.m.cmp(o.m);
@@ -53,6 +66,11 @@ class BigMFrac {
         return false;
     }
     isZero() { return this.m.isZero() && this.r.isZero(); }
+    isPositive() {
+        if (this.m.isPositive()) return true;
+        if (this.m.isZero() && this.r.isPositive()) return true;
+        return false;
+    }
 }
 
 function parseFrac(str) {
@@ -72,32 +90,136 @@ function parseFrac(str) {
     return new Frac(parseInt(str));
 }
 
-function subScalar(a, b) { return currentMode === 'bigm' ? a.sub(b) : a.sub(b); }
-function mulByFrac(a, frac) { return currentMode === 'bigm' ? a.mulFrac(frac) : a.mul(frac); }
-function divByFrac(a, frac) { return currentMode === 'bigm' ? a.divFrac(frac) : a.div(frac); }
+function toBigM(val) {
+    if (val instanceof BigMFrac) return val;
+    return new BigMFrac(new Frac(0), val);
+}
+
+function addVal(x, y) {
+    if (x instanceof BigMFrac || y instanceof BigMFrac) return toBigM(x).add(toBigM(y));
+    return x.add(y);
+}
+
+function subVal(x, y) {
+    if (x instanceof BigMFrac || y instanceof BigMFrac) return toBigM(x).sub(toBigM(y));
+    return x.sub(y);
+}
+
+function mulVal(x, y) {
+    if (x instanceof BigMFrac && y instanceof BigMFrac) {
+        if (x.m.isZero()) return y.mulFrac(x.r);
+        if (y.m.isZero()) return x.mulFrac(y.r);
+        return new BigMFrac(x.m.mul(y.r).add(x.r.mul(y.m)), x.r.mul(y.r));
+    }
+    if (x instanceof BigMFrac) return x.mulFrac(y);
+    if (y instanceof BigMFrac) return y.mulFrac(x);
+    return x.mul(y);
+}
+
+function divVal(x, y) {
+    if (x instanceof BigMFrac && y instanceof BigMFrac) return x.divFrac(y.r); 
+    if (x instanceof BigMFrac) return x.divFrac(y);
+    if (y instanceof BigMFrac) return toBigM(x).divFrac(y.r);
+    return x.div(y);
+}
+
+function cmpVal(x, y) {
+    if (x instanceof BigMFrac || y instanceof BigMFrac) return toBigM(x).cmp(toBigM(y));
+    return x.cmp(y);
+}
+
+function isNegativeVal(x) { return x.isNegative(); }
+function isZeroVal(x) { return x.isZero(); }
+function isPositiveVal(x) { return x.isPositive(); }
+function negVal(x) { return x.neg(); }
+
+function isBigMMode() {
+    return currentMode === 'bigm' || currentMode === 'dual';
+}
+
+function getDualRatio(c, a) {
+    // Tính -c_j / a_ij
+    return divVal(c, a);
+}
+
+function formatBigMFracSingleLine(bm) {
+    if (!bm) return "";
+    if (!(bm instanceof BigMFrac)) return bm.toString();
+    
+    let mPart = bm.m;
+    let rPart = bm.r;
+    
+    if (mPart.isZero() && rPart.isZero()) return "0";
+    
+    let mStr = "";
+    if (!mPart.isZero()) {
+        if (mPart.n === 1 && mPart.d === 1) mStr = "M";
+        else if (mPart.n === -1 && mPart.d === 1) mStr = "-M";
+        else mStr = mPart.toString() + "M";
+    }
+    
+    let rStr = "";
+    if (!rPart.isZero()) rStr = rPart.toString();
+    
+    if (mStr && rStr) {
+        if (mPart.isPositive()) return rStr + "+" + mStr;
+        else return rStr + mStr;       
+    }
+    return mStr || rStr;
+}
 
 // --- 2. GIAO DIỆN NHẬP LIỆU ---
 function toggleArtificial(i) {
     let cb = document.getElementById(`chk_art_${i}`);
-    let input = document.getElementById(`bVar_${i}`);
-    input.value = cb.checked ? `v${i+1}` : `w${i+1}`;
+    let bVar = document.getElementById(`bVar_${i}`);
+    let bVal = document.getElementById(`val_b_${i}`);
+    
+    if (cb.checked) {
+        bVar.value = `v${i+1}`;
+        if (currentMode === 'dual') {
+            bVal.value = "M";
+            bVal.disabled = true;
+            bVal.style.backgroundColor = "#fff";
+            bVal.style.fontWeight = "bold";
+            bVal.style.color = "#333";
+
+            // Ẩn các checkbox khác khi đang ở chế độ Dual
+            document.querySelectorAll('.artificial-cb').forEach(item => {
+                if (item !== cb) {
+                    item.parentElement.style.display = 'none';
+                }
+            });
+        }
+    } else {
+        bVar.value = `w${i+1}`;
+        if (currentMode === 'dual') {
+            bVal.value = "";
+            bVal.disabled = false;
+            bVal.style.backgroundColor = "";
+            bVal.style.fontWeight = "";
+            bVal.style.color = "";
+
+            // Hiện lại tất cả checkbox khi bỏ ẩn giả ở chế độ Dual
+            document.querySelectorAll('.artificial-cb').forEach(item => {
+                item.parentElement.style.display = '';
+            });
+        }
+    }
 }
 
-// Lọc ký tự: Chỉ cho phép số, dấu chấm (thập phân), dấu gạch chéo (phân số), dấu trừ (số âm)
 function sanitizeInput(el) {
-    el.value = el.value.replace(/[^0-9\.\-\/]/g, '');
+    if (currentMode === 'dual' && el.value === 'M') return;
+    el.value = el.value.replace(/[^0-9\.\-\/M]/g, '');
 }
 
-// Mặc định về 0 nếu người dùng xóa sạch giá trị
-function setDefaultZero(el) {
-    if (el.value.trim() === '') el.value = '0';
-}
+// function setDefaultZero(el) {
+//     if (el.value.trim() === '') el.value = '0';
+// }
 
 function generateInputGrid() {
     let rInput = document.getElementById('numRows');
     let cInput = document.getElementById('numCols');
     
-    // Đảm bảo số dòng/cột là số nguyên dương, mặc định là 1
     let rows = parseInt(rInput.value);
     let cols = parseInt(cInput.value);
     if (isNaN(rows) || rows < 1) rows = 1;
@@ -106,44 +228,45 @@ function generateInputGrid() {
     rInput.value = rows;
     cInput.value = cols;
     
-    // Lưu cấu hình vào localStorage
     localStorage.setItem('simplex_rows', rows);
     localStorage.setItem('simplex_cols', cols);
 
-    const inputValidation = `oninput="sanitizeInput(this)" onblur="setDefaultZero(this)"`;
+    const inputValidation = `oninput="sanitizeInput(this)" onfocus="clearValue(this)"`;
     let html = '<table class="simplex-table">';
     
-    if (currentMode === 'standard') {
+    if (currentMode === 'standard' || currentMode === 'dual') {
         html += `<tr><th colspan="2">f</th>`;
-        for(let j=1; j<=cols; j++) html += `<th><input type="text" id="nbVar_${j-1}" value="x${j}" class="input-cell" style="font-style:italic; font-weight:bold;"></th>`;
+        for(let j=1; j<=cols; j++) html += `<th><input type="text" id="nbVar_${j-1}" value="x${j}" class="input-cell title" style="font-style:italic; font-weight:bold;"></th>`;
         html += `</tr><tr>`;
-        html += `<th colspan="2"><input type="text" id="val_f" placeholder="0" value="" class="input-cell" ${inputValidation}></th>`;
+        html += `<th colspan="2"><input type="text" id="val_f" placeholder="0" value="" class="input-cell title" ${inputValidation}></th>`;
         for(let j=1; j<=cols; j++) html += `<td><input type="text" id="val_c_${j-1}" placeholder="0" value="" class="input-cell" ${inputValidation}></td>`;
         html += `</tr>`;
-    } else {
+    } else if (currentMode === 'bigm') {
         html += `<tr><th colspan="2">f</th>`;
-        for(let j=1; j<=cols; j++) html += `<th><input type="text" id="nbVar_${j-1}" value="x${j}" class="input-cell" style="font-style:italic; font-weight:bold;"></th>`;
-        html += '</tr>';
-        html += `<tr><th colspan="2" style="white-space:nowrap;"><input type="text" id="val_f_m" placeholder="0" value="" class="input-cell" ${inputValidation}> <strong>M</strong></th>`;
-        for(let j=1; j<=cols; j++) html += `<td><input type="text" id="val_c_m_${j-1}" placeholder="0" value="" class="input-cell" ${inputValidation}> <strong>M</strong></td>`;
-        html += '</tr><tr><th colspan="2"><input type="text" id="val_f_r" placeholder="0" value="" class="input-cell" ${inputValidation}></th>';
+        for(let j=1; j<=cols; j++) html += `<th><input type="text" id="nbVar_${j-1}" value="x${j}" class="input-cell title" style="font-style:italic; font-weight:bold;"></th>`;
+        html += `</tr><tr><th colspan="2" style="white-space:nowrap;"><input type="text" id="val_f_m" placeholder="0" value="" class="input-cell title" ${inputValidation}> <strong>M</strong></th>`;
+        for(let j=1; j<=cols; j++) html += `<td><input type="text" id="val_c_m_${j-1}" placeholder="0" value="" class="input-cell" ${inputValidation}><strong>M</strong></td>`;
+        html += `</tr><tr><th colspan="2"><input type="text" id="val_f_r" placeholder="0" value="" class="input-cell title" ${inputValidation}></th>`;
         for(let j=1; j<=cols; j++) html += `<td><input type="text" id="val_c_r_${j-1}" placeholder="0" value="" class="input-cell" ${inputValidation}></td>`;
-        html += '</tr>';
+        html += `</tr>`;
     }
 
     for(let i=1; i<=rows; i++) {
-        let bVarTpl = currentMode === 'bigm' ? 
-            `<input type="text" id="bVar_${i-1}" value="w${i}" class="input-cell" style="font-style:italic; font-weight:bold;"><br><label style="font-size: 0.8em;"><input type="checkbox" id="chk_art_${i-1}" class="artificial-cb" onchange="toggleArtificial(${i-1})"> Ẩn giả</label>` :
-            `<input type="text" id="bVar_${i-1}" value="w${i}" class="input-cell" style="font-style:italic; font-weight:bold;">`;
+        let bVarTpl = "";
+        if (currentMode === 'bigm' || currentMode === 'dual') {
+            bVarTpl = `<input type="text" id="bVar_${i-1}" value="w${i}" class="input-cell title" style="font-style:italic; font-weight:bold;"><br><label style="font-size: 0.8em;"><input type="checkbox" id="chk_art_${i-1}" class="artificial-cb" onchange="toggleArtificial(${i-1})"> Ẩn giả</label>`;
+        } else {
+            bVarTpl = `<input type="text" id="bVar_${i-1}" value="w${i}" class="input-cell title" style="font-style:italic; font-weight:bold;">`;
+        }
 
         html += `<tr><th>${bVarTpl}</th>`;
         html += `<td><input type="text" id="val_b_${i-1}" placeholder="0" value="" class="input-cell" ${inputValidation}></td>`;
         for(let j=1; j<=cols; j++) {
             html += `<td><input type="text" id="val_A_${i-1}_${j-1}" placeholder="0" value="" class="input-cell" ${inputValidation}></td>`;
         }
-        html += '</tr>';
+        html += `</tr>`;
     }
-    html += '</table>';
+    html += `</table>`;
     
     document.getElementById('inputGridContainer').innerHTML = html;
     document.getElementById('controls').style.display = 'block';
@@ -159,31 +282,190 @@ function startSolving() {
     
     let T = { basicVars: [], nonBasicVars: [], c: [], b: [], A: [], f: null };
 
-    if (currentMode === 'standard') {
-        T.f = parseFrac(document.getElementById('val_f').value);
-    } else {
-        T.f = new BigMFrac(parseFrac(document.getElementById('val_f_m').value), parseFrac(document.getElementById('val_f_r').value));
-    }
-
-    for(let j=0; j<numCols; j++) {
-        T.nonBasicVars.push(document.getElementById(`nbVar_${j}`).value);
-        if (currentMode === 'standard') {
-            T.c.push(parseFrac(document.getElementById(`val_c_${j}`).value));
-        } else {
-            T.c.push(new BigMFrac(parseFrac(document.getElementById(`val_c_m_${j}`).value), parseFrac(document.getElementById(`val_c_r_${j}`).value)));
-        }
-    }
-
-    for(let i=0; i<numRows; i++) {
-        T.basicVars.push(document.getElementById(`bVar_${i}`).value);
-        T.b.push(parseFrac(document.getElementById(`val_b_${i}`).value));
-        let rowA = [];
+    if (currentMode === 'dual') {
+        let fReal = parseFrac(document.getElementById('val_f').value);
+        T.f = new BigMFrac(new Frac(0), fReal);
+        
         for(let j=0; j<numCols; j++) {
-            rowA.push(parseFrac(document.getElementById(`val_A_${i}_${j}`).value));
+            T.nonBasicVars.push(document.getElementById(`nbVar_${j}`).value);
+            let cReal = parseFrac(document.getElementById(`val_c_${j}`).value);
+            T.c.push(new BigMFrac(new Frac(0), cReal));
         }
-        T.A.push(rowA);
+
+        for(let i=0; i<numRows; i++) {
+            T.basicVars.push(document.getElementById(`bVar_${i}`).value);
+            
+            let cb = document.getElementById(`chk_art_${i}`);
+            if (cb && cb.checked) {
+                T.b.push(new BigMFrac(new Frac(1), new Frac(0)));
+            } else {
+                let bReal = parseFrac(document.getElementById(`val_b_${i}`).value);
+                T.b.push(new BigMFrac(new Frac(0), bReal)); 
+            }
+
+            let rowA = [];
+            for(let j=0; j<numCols; j++) {
+                rowA.push(parseFrac(document.getElementById(`val_A_${i}_${j}`).value));
+            }
+            T.A.push(rowA);
+        }
+    } else {
+        if (currentMode === 'standard') {
+            T.f = parseFrac(document.getElementById('val_f').value);
+        } else {
+            T.f = new BigMFrac(parseFrac(document.getElementById('val_f_m').value), parseFrac(document.getElementById('val_f_r').value));
+        }
+
+        for(let j=0; j<numCols; j++) {
+            T.nonBasicVars.push(document.getElementById(`nbVar_${j}`).value);
+            if (currentMode === 'standard') {
+                T.c.push(parseFrac(document.getElementById(`val_c_${j}`).value));
+            } else {
+                T.c.push(new BigMFrac(parseFrac(document.getElementById(`val_c_m_${j}`).value), parseFrac(document.getElementById(`val_c_r_${j}`).value)));
+            }
+        }
+
+        for(let i=0; i<numRows; i++) {
+            T.basicVars.push(document.getElementById(`bVar_${i}`).value);
+            T.b.push(parseFrac(document.getElementById(`val_b_${i}`).value));
+            let rowA = [];
+            for(let j=0; j<numCols; j++) {
+                rowA.push(parseFrac(document.getElementById(`val_A_${i}_${j}`).value));
+            }
+            T.A.push(rowA);
+        }
     }
 
+    // --- ĐỐI VỚI CHẾ ĐỘ ĐƠN HÌNH ĐỐI NGẪU (DUAL) ---
+    if (currentMode === 'dual') {
+        let iteration = 0;
+        const maxIter = 20;
+        T.droppedRows = []; 
+
+        while(iteration < maxIter) {
+            let pRow = -1;
+            let pCol = -1;
+
+            let artRowsInBasis = [];
+            for (let i = 0; i < T.basicVars.length; i++) {
+                if (T.basicVars[i].startsWith('v') && !T.droppedRows.includes(i)) {
+                    artRowsInBasis.push(i);
+                }
+            }
+
+            if (artRowsInBasis.length > 0) {
+                // --- GIAI ĐOẠN A: CÓ ẨN GIẢ TRONG CƠ SỞ ---
+                for (let r of artRowsInBasis) {
+                    let validCols = [];
+                    for (let j = 0; j < T.nonBasicVars.length; j++) {
+                        // Chọn phần tử xoay bắt buộc a_ij > 0
+                        if (T.A[r][j] !== null && isPositiveVal(T.A[r][j])) {
+                            validCols.push(j);
+                        }
+                    }
+
+                    if (validCols.length > 0) {
+                        pRow = r;
+                        let minRatio = null;
+                        for (let j of validCols) {
+                            let ratio = getDualRatio(T.c[j], T.A[r][j]);
+                            // Chọn cột có tỷ số nhỏ nhất
+                            if (minRatio === null || cmpVal(ratio, minRatio) < 0) {
+                                minRatio = ratio;
+                                pCol = j;
+                            }
+                        }
+                        if (pRow !== -1 && pCol !== -1) break; 
+                    }
+                }
+            }
+
+            if (pRow === -1) {
+                // --- GIAI ĐOẠN B: KHÔNG CÒN ẨN GIẢ TRONG CƠ SỞ ---
+                let minB = new Frac(0);
+                for (let i = 0; i < T.basicVars.length; i++) {
+                    if (T.droppedRows.includes(i)) continue;
+                    if (isNegativeVal(T.b[i]) && cmpVal(T.b[i], minB) < 0) {
+                        minB = T.b[i];
+                        pRow = i;
+                    }
+                }
+
+                if (pRow !== -1) {
+                    let validCols = [];
+                    for (let j = 0; j < T.nonBasicVars.length; j++) {
+                        // Chọn phần tử xoay bắt buộc a_ij < 0
+                        if (T.A[pRow][j] !== null && isNegativeVal(T.A[pRow][j])) {
+                            validCols.push(j);
+                        }
+                    }
+
+                    if (validCols.length === 0) {
+                        renderTableau(T, iteration, -1, -1);
+                        output.innerHTML += '<div class="status-infeasible">Tồn tại hàng xoay chứa các hệ số không âm. Hàm mục tiêu bài toán đối ngẫu KHÔNG BỊ CHẶN (Bài toán gốc VÔ NGHIỆM).</div>';
+                        break;
+                    }
+
+                    let maxRatio = null;
+                    for (let j of validCols) {
+                        let ratio = getDualRatio(T.c[j], T.A[pRow][j]);
+                        // Chọn cột có tỷ số LỚN nhất
+                        if (maxRatio === null || cmpVal(ratio, maxRatio) > 0) {
+                            maxRatio = ratio;
+                            pCol = j;
+                        }
+                    }
+                }
+            }
+
+            // --- KIỂM TRA ĐIỀU KIỆN DỪNG ---
+            if (pRow === -1) {
+                let dualFeasible = true;
+                for (let j = 0; j < T.c.length; j++) {
+                    if (T.c[j] !== null && isNegativeVal(T.c[j])) {
+                        dualFeasible = false;
+                        break;
+                    }
+                }
+
+                renderTableau(T, iteration, -1, -1);
+
+                if (dualFeasible) {
+                    let hasNonBasicArtificial = T.nonBasicVars.some(v => v.startsWith('v'));
+                    let hasArtificialInInitial = false;
+                    for (let i = 0; i < numRows; i++) {
+                        let cb = document.getElementById(`chk_art_${i}`);
+                        if (cb && cb.checked) {
+                            hasArtificialInInitial = true;
+                            break;
+                        }
+                    }
+
+                    if (hasArtificialInInitial && hasNonBasicArtificial) {
+                        output.innerHTML += '<div class="status-unbounded">Cơ sở gốc khả dĩ và đối ngẫu khả dĩ nhưng ẩn giả ngoài cơ sở. Hàm mục tiêu bài toán gốc KHÔNG BỊ CHẶN.</div>';
+                    } else {
+                        output.innerHTML += '<div class="status-optimal">Cơ sở gốc khả dĩ và đối ngẫu khả dĩ. Kết luận nghiệm tối ưu của bài toán.</div>';
+                    }
+                } else {
+                    output.innerHTML += '<div class="status-optimal">Cơ sở gốc khả dĩ nhưng KHÔNG đối ngẫu khả dĩ. Bảng đơn hình dừng lại.</div>';
+                }
+                break;
+            }
+
+            renderTableau(T, iteration, pRow, pCol);
+            T = pivot(T, pRow, pCol);
+            
+            // LOGIC GẠCH BỎ HÀNG: Nếu ẩn giả vừa quay trở lại cơ sở, ghi nhận gạch bỏ hàng này để bỏ qua tính toán về sau
+            if (T.basicVars[pRow].startsWith('v')) {
+                T.droppedRows.push(pRow);
+            }
+            
+            iteration++;
+        }
+        return; 
+    }
+
+    // --- ĐỐI VỚI CHẾ ĐỘ ĐƠN HÌNH GỐC HOẶC BIG-M ---
     let iteration = 0;
     const maxIter = 20;
 
@@ -191,11 +473,10 @@ function startSolving() {
         let pCol = -1;
         let minC = currentMode === 'standard' ? new Frac(0) : new BigMFrac(new Frac(0), new Frac(0));
 
-        // 1. Tìm cột xoay
         for(let j=0; j<T.c.length; j++) {
             if (currentMode === 'bigm' && T.nonBasicVars[j].startsWith('v')) continue; 
             
-            if (T.c[j] !== null && T.c[j].isNegative() && T.c[j].cmp(minC) < 0) {
+            if (T.c[j] !== null && isNegativeVal(T.c[j]) && cmpVal(T.c[j], minC) < 0) {
                 minC = T.c[j];
                 pCol = j;
             }
@@ -206,7 +487,7 @@ function startSolving() {
             if (currentMode === 'standard') {
                 let hasZeroDelta = false;
                 for(let j=0; j<T.c.length; j++) {
-                    if (T.c[j] !== null && T.c[j].isZero()) {
+                    if (T.c[j] !== null && isZeroVal(T.c[j])) {
                         hasZeroDelta = true;
                         break;
                     }
@@ -219,7 +500,7 @@ function startSolving() {
             } else {
                 let hasPositiveArtificial = false;
                 for(let i=0; i<T.basicVars.length; i++) {
-                    if (T.basicVars[i].startsWith('v') && T.b[i].isPositive()) {
+                    if (T.basicVars[i].startsWith('v') && isPositiveVal(T.b[i])) {
                         hasPositiveArtificial = true;
                         break;
                     }
@@ -237,8 +518,8 @@ function startSolving() {
         let minRatio = null;
         for(let i=0; i<T.A.length; i++) {
             if (T.A[i][pCol] !== null && T.A[i][pCol].isPositive()) {
-                let ratio = T.b[i].div(T.A[i][pCol]);
-                if (minRatio === null || ratio.cmp(minRatio) < 0) {
+                let ratio = divVal(T.b[i], T.A[i][pCol]);
+                if (minRatio === null || cmpVal(ratio, minRatio) < 0) {
                     minRatio = ratio;
                     pRow = i;
                 }
@@ -252,7 +533,7 @@ function startSolving() {
             } else {
                 let hasPositiveArtificial = false;
                 for(let i=0; i<T.basicVars.length; i++) {
-                    if (T.basicVars[i].startsWith('v') && T.b[i].isPositive()) {
+                    if (T.basicVars[i].startsWith('v') && isPositiveVal(T.b[i])) {
                         hasPositiveArtificial = true;
                         break;
                     }
@@ -274,7 +555,15 @@ function startSolving() {
 
 function pivot(T, pRow, pCol) {
     let P = T.A[pRow][pCol];
-    let newT = { basicVars: [...T.basicVars], nonBasicVars: [...T.nonBasicVars], A: [], b: [], c: [], f: null };
+    let newT = { 
+        basicVars: [...T.basicVars], 
+        nonBasicVars: [...T.nonBasicVars], 
+        A: [], 
+        b: [], 
+        c: [], 
+        f: null,
+        droppedRows: T.droppedRows ? [...T.droppedRows] : []
+    };
     
     newT.basicVars[pRow] = T.nonBasicVars[pCol];
     newT.nonBasicVars[pCol] = T.basicVars[pRow];
@@ -285,23 +574,31 @@ function pivot(T, pRow, pCol) {
     for(let i=0; i<T.basicVars.length; i++) newT.A.push([]);
 
     for(let j=0; j<T.nonBasicVars.length; j++) {
+        // Dual: KHÔNG gạch bỏ cột ẩn giả. Chỉ gạch bỏ nếu ở chế độ Big-M
         if (currentMode === 'bigm' && newT.nonBasicVars[j].startsWith('v')) {
             newT.A[pRow][j] = null;
         } else if(j === pCol) {
             newT.A[pRow][j] = invP;
         } else {
-            newT.A[pRow][j] = T.A[pRow][j].mul(invP);
+            newT.A[pRow][j] = mulVal(T.A[pRow][j], invP);
         }
     }
     
-    newT.b[pRow] = T.b[pRow].mul(invP);
+    newT.b[pRow] = mulVal(T.b[pRow], invP);
 
     for(let i=0; i<T.basicVars.length; i++) {
         if(i !== pRow) {
+            // Dual: Bỏ qua hoàn toàn việc tính toán ở hàng đã bị gạch bỏ
+            if (currentMode === 'dual' && newT.droppedRows.includes(i)) {
+                newT.b[i] = null;
+                newT.A[i][pCol] = null;
+                continue;
+            }
+
             if (currentMode === 'bigm' && newT.nonBasicVars[pCol].startsWith('v')) {
                 newT.A[i][pCol] = null;
             } else {
-                newT.A[i][pCol] = T.A[i][pCol].div(negP);
+                newT.A[i][pCol] = divVal(T.A[i][pCol], negP);
             }
         }
     }
@@ -309,11 +606,20 @@ function pivot(T, pRow, pCol) {
     if (currentMode === 'bigm' && newT.nonBasicVars[pCol].startsWith('v')) {
         newT.c[pCol] = null;
     } else {
-        newT.c[pCol] = divByFrac(T.c[pCol], negP);
+        newT.c[pCol] = divVal(T.c[pCol], negP);
     }
 
     for(let i=0; i<T.basicVars.length; i++) {
         if(i === pRow) continue;
+        
+        // Dual: Bỏ qua hoàn toàn việc tính toán các cột khác của hàng đã bị gạch bỏ
+        if (currentMode === 'dual' && newT.droppedRows.includes(i)) {
+            for(let j=0; j<T.nonBasicVars.length; j++) {
+                newT.A[i][j] = null;
+            }
+            continue;
+        }
+
         for(let j=0; j<T.nonBasicVars.length; j++) {
             if(j === pCol) continue;
             
@@ -322,11 +628,11 @@ function pivot(T, pRow, pCol) {
                 continue;
             }
             
-            let cross = T.A[pRow][j].mul(T.A[i][pCol]).div(P);
-            newT.A[i][j] = T.A[i][j].sub(cross);
+            let cross = divVal(mulVal(T.A[pRow][j], T.A[i][pCol]), P);
+            newT.A[i][j] = subVal(T.A[i][j], cross);
         }
-        let bCross = T.b[pRow].mul(T.A[i][pCol]).div(P);
-        newT.b[i] = T.b[i].sub(bCross);
+        let bCross = divVal(mulVal(T.b[pRow], T.A[i][pCol]), P);
+        newT.b[i] = subVal(T.b[i], bCross);
     }
 
     for(let j=0; j<T.nonBasicVars.length; j++) {
@@ -337,12 +643,12 @@ function pivot(T, pRow, pCol) {
             continue;
         }
         
-        let cCross = divByFrac(mulByFrac(T.c[pCol], T.A[pRow][j]), P);
-        newT.c[j] = subScalar(T.c[j], cCross);
+        let cCross = divVal(mulVal(T.c[pCol], T.A[pRow][j]), P);
+        newT.c[j] = subVal(T.c[j], cCross);
     }
     
-    let fCross = divByFrac(mulByFrac(T.c[pCol], T.b[pRow]), P);
-    newT.f = subScalar(T.f, fCross);
+    let fCross = divVal(mulVal(T.c[pCol], T.b[pRow]), P);
+    newT.f = subVal(T.f, fCross);
 
     return newT;
 }
@@ -360,13 +666,23 @@ function renderTableau(T, iter, pRow, pCol) {
     html += `<div class="step-title">Bảng lặp thứ ${iter}:</div>`;
     html += `<table class="simplex-table">`;
     
-    if (currentMode === 'standard') {
+    if (currentMode === 'standard' || currentMode === 'dual') {
         html += `<tr><th colspan="2">f</th>`;
-        for(let j=0; j<T.nonBasicVars.length; j++) html += `<th>${T.nonBasicVars[j]}</th>`;
-        html += `</tr><tr>`;
-        html += `<th colspan="2">${T.f.toString()}</th>`;
         for(let j=0; j<T.nonBasicVars.length; j++) {
-            html += `<td ${j === pCol ? 'class="pivot-element"' : ''}>${T.c[j] ? T.c[j].toString() : ''}</td>`;
+            // Không bao giờ gạch bỏ cột ở chế độ đối ngẫu
+            html += `<th>${T.nonBasicVars[j]}</th>`;
+        }
+        html += `</tr><tr>`;
+        
+        let fStr = currentMode === 'dual' ? formatBigMFracSingleLine(T.f) : T.f.toString();
+        html += `<th colspan="2">${fStr}</th>`;
+        
+        for(let j=0; j<T.nonBasicVars.length; j++) {
+            let cellVal = "";
+            if (T.c[j] !== null) {
+                cellVal = currentMode === 'dual' ? formatBigMFracSingleLine(T.c[j]) : T.c[j].toString();
+            }
+            html += `<td ${j === pCol ? 'class="pivot-element"' : ''}>${cellVal}</td>`;
         }
         html += `</tr>`;
     } else {
@@ -375,7 +691,7 @@ function renderTableau(T, iter, pRow, pCol) {
             let isDropped = T.nonBasicVars[j].startsWith('v');
             html += `<th ${isDropped ? 'class="dropped-cell"' : ''}>${T.nonBasicVars[j]}</th>`;
         }
-        html += `</tr>`;
+        html += '</tr>';
         
         html += `<tr><th colspan="2" style="white-space:nowrap;">${formatM(T.f.m)}</th>`;
         for(let j=0; j<T.nonBasicVars.length; j++) {
@@ -401,13 +717,21 @@ function renderTableau(T, iter, pRow, pCol) {
     }
 
     for(let i=0; i<T.basicVars.length; i++) {
-        html += `<tr><th>${T.basicVars[i]}</th>`;
+        let isRowDropped = (currentMode === 'dual' && T.droppedRows && T.droppedRows.includes(i));
+        
+        html += `<tr><th ${isRowDropped ? 'class="dropped-cell"' : ''}>${T.basicVars[i]}</th>`;
         let isPivotRow = (i === pRow) ? 'class="pivot-element"' : '';
-        html += `<td ${isPivotRow}>${T.b[i].toString()}</td>`;
+        
+        let bValStr = "";
+        if (!isRowDropped && T.b[i] !== null) {
+            bValStr = currentMode === 'dual' ? formatBigMFracSingleLine(T.b[i]) : T.b[i].toString();
+        }
+        html += `<td ${isPivotRow} ${isRowDropped ? 'class="dropped-cell"' : ''}>${bValStr}</td>`;
         
         for(let j=0; j<T.nonBasicVars.length; j++) {
-            let isDropped = (currentMode === 'bigm' && T.nonBasicVars[j].startsWith('v'));
-            if (isDropped) {
+            let isColDropped = (currentMode === 'bigm' && T.nonBasicVars[j].startsWith('v'));
+            
+            if (isColDropped || isRowDropped) {
                 html += `<td class="dropped-cell"></td>`;
             } else {
                 let isPivotCell = (i === pRow && j === pCol) ? 'class="pivot-element" style="color:red;"' : '';
@@ -422,7 +746,6 @@ function renderTableau(T, iter, pRow, pCol) {
 }
 
 window.onload = function() { 
-    // Khôi phục kích thước bảng từ localStorage nếu có
     let savedRows = localStorage.getItem('simplex_rows');
     let savedCols = localStorage.getItem('simplex_cols');
     if (savedRows) document.getElementById('numRows').value = savedRows;

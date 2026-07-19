@@ -276,7 +276,7 @@ function generateInputGrid() {
 // --- 3. THUẬT TOÁN CỐT LÕI VÀ HIỂN THỊ ---
 function startSolving() {
     const output = document.getElementById('outputArea');
-    output.innerHTML = '<h2>Quá trình giải:</h2>';
+    output.innerHTML = '<h2>Quá trình giải</h2>';
     const numRows = parseInt(document.getElementById('numRows').value);
     const numCols = parseInt(document.getElementById('numCols').value);
     
@@ -402,7 +402,7 @@ function startSolving() {
 
                     if (validCols.length === 0) {
                         renderTableau(T, iteration, -1, -1);
-                        output.innerHTML += '<div class="status-infeasible">Tồn tại hàng xoay chứa các hệ số không âm. Hàm mục tiêu bài toán đối ngẫu KHÔNG BỊ CHẶN (Bài toán gốc VÔ NGHIỆM).</div>';
+                        output.innerHTML += '<div class="status-infeasible">Tồn tại hàng xoay chứa các hệ số không âm. Hàm mục tiêu bài toán đối ngẫu KHÔNG BỊ CHẶN (Bài toán gốc VÔ NGHIỆM).</div>';   // Đơn hình đối ngẫu
                         break;
                     }
 
@@ -442,12 +442,12 @@ function startSolving() {
                     }
 
                     if (hasArtificialInInitial && hasNonBasicArtificial) {
-                        output.innerHTML += '<div class="status-unbounded">Cơ sở gốc khả dĩ và đối ngẫu khả dĩ nhưng ẩn giả ngoài cơ sở. Hàm mục tiêu bài toán gốc KHÔNG BỊ CHẶN.</div>';
+                        output.innerHTML += '<div class="status-unbounded">Cơ sở gốc khả dĩ và đối ngẫu khả dĩ nhưng ẩn giả ngoài cơ sở. Hàm mục tiêu bài toán gốc KHÔNG BỊ CHẶN.</div>';   // Đơn hình đối ngẫu
                     } else {
-                        output.innerHTML += '<div class="status-optimal">Cơ sở gốc khả dĩ và đối ngẫu khả dĩ. Kết luận nghiệm tối ưu của bài toán.</div>';
+                        output.innerHTML += '<div class="status-optimal">Cơ sở gốc khả dĩ và đối ngẫu khả dĩ. Kết luận nghiệm tối ưu của bài toán.</div>';   // Đơn hình đối ngẫu
                     }
                 } else {
-                    output.innerHTML += '<div class="status-optimal">Cơ sở gốc khả dĩ nhưng KHÔNG đối ngẫu khả dĩ. Bảng đơn hình dừng lại.</div>';
+                    output.innerHTML += '<div class="status-optimal">Cơ sở gốc khả dĩ nhưng KHÔNG đối ngẫu khả dĩ. Bảng đơn hình dừng lại.</div>';   // Đơn hình đối ngẫu
                 }
                 break;
             }
@@ -493,9 +493,9 @@ function startSolving() {
                     }
                 }
                 if (hasZeroDelta) {
-                    output.innerHTML += '<div class="status-optimal">Tồn tại biến ngoài cơ sở có hệ số bằng 0. Bài toán có VÔ SỐ nghiệm tối ưu.</div>';
+                    output.innerHTML += '<div class="status-optimal">Tồn tại biến ngoài cơ sở có hệ số bằng 0. Bài toán có VÔ SỐ nghiệm tối ưu.</div>';   // Đơn hình gốc
                 } else {
-                    output.innerHTML += '<div class="status-optimal">Hệ số các biến ngoài cơ sở đều dương. Kết luận nghiệm tối ưu của bài toán.</div>';
+                    output.innerHTML += '<div class="status-optimal">Hệ số các biến ngoài cơ sở đều dương. Kết luận nghiệm tối ưu của bài toán.</div>';   // Đơn hình gốc
                 }
             } else {
                 let hasPositiveArtificial = false;
@@ -506,9 +506,9 @@ function startSolving() {
                     }
                 }
                 if (hasPositiveArtificial) {
-                    output.innerHTML += '<div class="status-infeasible">Tồn tại ẩn giả dương trong cơ sở. Bài toán gốc VÔ NGHIỆM.</div>';
+                    output.innerHTML += '<div class="status-infeasible">Tồn tại ẩn giả dương trong cơ sở. Bài toán gốc VÔ NGHIỆM.</div>';   // Đơn hình Big-M
                 } else {
-                    output.innerHTML += '<div class="status-optimal">Mọi ẩn giả bằng 0. Kết luận nghiệm tối ưu của bài toán.</div>';
+                    output.innerHTML += '<div class="status-optimal">Mọi ẩn giả bằng 0. Kết luận nghiệm tối ưu của bài toán.</div>';   // Đơn hình Big-M
                 }
             }
             break;
@@ -529,7 +529,7 @@ function startSolving() {
         if (pRow === -1) {
             renderTableau(T, iteration, -1, pCol);
             if (currentMode === 'standard') {
-                output.innerHTML += '<div class="status-unbounded">Tồn tại cột xoay chứa các hệ số không dương. Hàm mục tiêu KHÔNG BỊ CHẶN.</div>';
+                output.innerHTML += '<div class="status-unbounded">Tồn tại cột xoay chứa các hệ số không dương. Hàm mục tiêu KHÔNG BỊ CHẶN.</div>';   // Đơn hình gốc
             } else {
                 let hasPositiveArtificial = false;
                 for(let i=0; i<T.basicVars.length; i++) {
@@ -539,9 +539,9 @@ function startSolving() {
                     }
                 }
                 if (hasPositiveArtificial) {
-                    output.innerHTML += '<div class="status-infeasible">Hàm mục tiêu KHÔNG BỊ CHẶN. Tồn tại ẩn giả dương trong cơ sở. Bài toán gốc VÔ NGHIỆM</div>';
+                    output.innerHTML += '<div class="status-infeasible">Hàm mục tiêu KHÔNG BỊ CHẶN. Tồn tại ẩn giả dương trong cơ sở. Bài toán gốc VÔ NGHIỆM</div>';   // Đơn hình Big-M
                 } else {
-                    output.innerHTML += '<div class="status-unbounded">Hàm mục tiêu KHÔNG BỊ CHẶN. Mọi ẩn giả bằng 0. Bài toán gốc có hàm mục tiêu cũng KHÔNG BỊ CHẶN.</div>';
+                    output.innerHTML += '<div class="status-unbounded">Hàm mục tiêu KHÔNG BỊ CHẶN. Mọi ẩn giả bằng 0. Bài toán gốc có hàm mục tiêu cũng KHÔNG BỊ CHẶN.</div>';   // Đơn hình Big-M
                 }
             }
             break;
@@ -663,7 +663,7 @@ function formatM(frac) {
 function renderTableau(T, iter, pRow, pCol) {
     const output = document.getElementById('outputArea');
     let html = `<div class="step-container">`;
-    html += `<div class="step-title">Bảng lặp thứ ${iter}:</div>`;
+    html += `<div class="step-title">Bảng thứ ${iter+1}:</div>`;
     html += `<table class="simplex-table">`;
     
     if (currentMode === 'standard' || currentMode === 'dual') {
@@ -720,22 +720,32 @@ function renderTableau(T, iter, pRow, pCol) {
         let isRowDropped = (currentMode === 'dual' && T.droppedRows && T.droppedRows.includes(i));
         
         html += `<tr><th ${isRowDropped ? 'class="dropped-cell"' : ''}>${T.basicVars[i]}</th>`;
+        // Highlight cột b_i (hàng xoay)
         let isPivotRow = (i === pRow) ? 'class="pivot-element"' : '';
-        
         let bValStr = "";
         if (!isRowDropped && T.b[i] !== null) {
             bValStr = currentMode === 'dual' ? formatBigMFracSingleLine(T.b[i]) : T.b[i].toString();
         }
         html += `<td ${isPivotRow} ${isRowDropped ? 'class="dropped-cell"' : ''}>${bValStr}</td>`;
         
+        // Vẽ các ô a_ij
         for(let j=0; j<T.nonBasicVars.length; j++) {
             let isColDropped = (currentMode === 'bigm' && T.nonBasicVars[j].startsWith('v'));
             
             if (isColDropped || isRowDropped) {
                 html += `<td class="dropped-cell"></td>`;
             } else {
-                let isPivotCell = (i === pRow && j === pCol) ? 'class="pivot-element" style="color:red;"' : '';
-                html += `<td ${isPivotCell}>${T.A[i][j] ? T.A[i][j].toString() : ''}</td>`;
+                let tdAttr = "";
+                // Nếu là phần tử xoay trung tâm: Nền vàng, chữ đỏ, in đậm
+                if (i === pRow && j === pCol) {
+                    tdAttr = 'class="pivot-element" style="color:red; font-weight:bold;"';
+                } 
+                // Nếu nằm trong hàng xoay hoặc cột xoay (nhưng không phải phần tử xoay): Nền vàng, không in đậm
+                else if (i === pRow || j === pCol) {
+                    tdAttr = 'class="pivot-element" style="font-weight:normal;"';
+                }
+                
+                html += `<td ${tdAttr}>${T.A[i][j] ? T.A[i][j].toString() : ''}</td>`;
             }
         }
         html += `</tr>`;

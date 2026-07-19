@@ -158,7 +158,7 @@ button:hover { background: #2980b9; }
     font-size: 0.9em; 
 }
 .simplex-table th { background-color: #eaeaea; font-weight: bold; }
-.pivot-element { background-color: #ffeaa7; font-weight: bold; }
+.pivot-element { background-color: #fff2c9; font-weight: bold; }
 
 .artificial-cb {
     transform: scale(1.2);

@@ -87,8 +87,8 @@ input::-webkit-inner-spin-button {
   margin: 0;
 }
 input[type="number"] { border: 1px solid #ccc; width: 60px; width: 36px; height: 28px; }
-.input-cell { border: 0px; width: 30px; font-size: 0.95em; padding: 6px 0px; }
-.input-cell.title { background: #eaeaea; }
+.input-cell { border: 0px; width: 25px; font-size: 0.95em; padding: 6px 0px; }
+.input-cell.title { width: 30px; background: #eaeaea; }
 .input-cell:focus { outline: none; }
 .input-cell:focus::placeholder { color: transparent; }
 
@@ -163,7 +163,28 @@ button:hover { background: #2980b9; }
 .artificial-cb {
     transform: scale(1.2);
     margin-left: 5px;
-    cursor: pointer;
+    /* cursor: pointer; */
+}
+
+.artificial-label {
+    position: absolute;
+    right: 100%;             
+    top: 50%;
+    transform: translateY(-50%); 
+    margin-right: 12px;      
+    display: flex;
+    align-items: center;
+    flex-direction: row-reverse; /* ĐẢO NGƯỢC: Chữ hiện trước, checkbox hiện sau */
+    gap: 8px;                
+    white-space: nowrap;
+    font-weight: normal;     
+    color: #333;
+    /* cursor: pointer; */
+}
+
+.artificial-label input[type="checkbox"] {
+    margin: 0;
+    /* cursor: pointer; */
 }
 
 /* HIỆU ỨNG GẠCH CHÉO CHO CỘT ẨN GIẢ ĐÃ RA KHỎI CƠ SỞ */
@@ -189,6 +210,16 @@ button:hover { background: #2980b9; }
     .simplex-table th, .simplex-table td { padding: 6px 10px; font-size: 0.85em; }
     .input-cell { width: 20px; font-size: 0.95em; padding: 6px 0px; }
     .input-cell.title { width: 25px; }
+
+    .artificial-label {
+        position: static;          /* Hủy treo bên ngoài, tự động rớt xuống dưới ô input */
+        transform: none;           
+        margin: 0 auto 0 auto;   
+        display: flex;
+        flex-direction: row;       /* BÌNH THƯỜNG: Checkbox hiện trước, chữ hiện sau */
+        justify-content: center;   
+        width: fit-content;        
+    }
 }
 
 #note {

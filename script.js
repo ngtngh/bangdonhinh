@@ -186,7 +186,10 @@ function toggleArtificial(i) {
             // Ẩn các checkbox khác khi đang ở chế độ Dual
             document.querySelectorAll('.artificial-cb').forEach(item => {
                 if (item !== cb) {
-                    item.parentElement.style.display = 'none';
+                    item.disabled = true;
+                    item.style.pointerEvents = 'none';
+                    item.parentElement.style.opacity = '0.5'; // Làm mờ chữ và checkbox
+                    item.parentElement.style.cursor = 'not-allowed'; // Đổi con trỏ chuột
                 }
             });
         }
@@ -201,7 +204,10 @@ function toggleArtificial(i) {
 
             // Hiện lại tất cả checkbox khi bỏ ẩn giả ở chế độ Dual
             document.querySelectorAll('.artificial-cb').forEach(item => {
-                item.parentElement.style.display = '';
+                item.disabled = false;
+                item.style.pointerEvents = 'auto';
+                item.parentElement.style.opacity = '1'; 
+                item.parentElement.style.cursor = 'pointer';
             });
         }
     }
@@ -252,14 +258,14 @@ function generateInputGrid() {
     }
 
     for(let i=1; i<=rows; i++) {
-        let bVarTpl = "";
+        let bVarTpl = `<input type="text" id="bVar_${i-1}" value="w${i}" class="input-cell title" style="font-style:italic; font-weight:bold;">`;
+        
+        // Không dùng <br>, cấu trúc HTML cố định, CSS sẽ tự động đổi chỗ và rớt dòng
         if (currentMode === 'bigm' || currentMode === 'dual') {
-            bVarTpl = `<input type="text" id="bVar_${i-1}" value="w${i}" class="input-cell title" style="font-style:italic; font-weight:bold;"><br><label style="font-size: 0.8em;"><input type="checkbox" id="chk_art_${i-1}" class="artificial-cb" onchange="toggleArtificial(${i-1})"> Ẩn giả</label>`;
-        } else {
-            bVarTpl = `<input type="text" id="bVar_${i-1}" value="w${i}" class="input-cell title" style="font-style:italic; font-weight:bold;">`;
+            bVarTpl += `<label class="artificial-label"><input type="checkbox" id="chk_art_${i-1}" class="artificial-cb" onchange="toggleArtificial(${i-1})"> <span style="font-size: 0.9em;">Ẩn giả</span></label>`;
         }
 
-        html += `<tr><th>${bVarTpl}</th>`;
+        html += `<tr><th style="position: relative;">${bVarTpl}</th>`;
         html += `<td><input type="text" id="val_b_${i-1}" placeholder="0" value="" class="input-cell" ${inputValidation}></td>`;
         for(let j=1; j<=cols; j++) {
             html += `<td><input type="text" id="val_A_${i-1}_${j-1}" placeholder="0" value="" class="input-cell" ${inputValidation}></td>`;

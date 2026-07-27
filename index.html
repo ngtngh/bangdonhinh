@@ -30,8 +30,19 @@
         </div>
 
         <div id="inputGridContainer"></div>
-        <div id="controls" style="display: none;">
+        <div id="controls" style="display: none; justify-content: center; align-items: center; position: relative; margin-top: 15px;">
+            <!-- Nút chính (sẽ luôn nằm giữa do justify-content: center) -->
             <button id="solveButton" onclick="startSolving()">Giải Bảng Đơn Hình</button>
+            
+            <!-- Cụm nút phụ (ép sang phải bằng position: absolute) -->
+            <div class="action-buttons">
+                <button id="resetButton" onclick="resetProblem()" class="icon-btn" title="Làm mới bài toán">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                </button>
+                <button id="shareLinkButton" onclick="copyShareLink()" class="icon-btn" title="Sao chép link">
+                    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                </button>
+            </div>
         </div>
 
         <div id="outputArea"></div>

@@ -232,3 +232,67 @@ footer {
     font-size: 14px;
     margin-top: 20px;
 }
+
+/* --- Nút chức năng nhỏ --- */
+.action-buttons {
+    position: absolute;
+    right: 0;
+    display: flex;
+    gap: 8px;
+}
+
+.icon-btn {
+    background-color: #f8f9fa;
+    color: #495057;
+    border: 1px solid #ced4da;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    background-color: #e9ecef;
+    color: #2a73cc; /* Sáng màu khi trỏ chuột */
+    border-color: #adb5bd;
+}
+
+/* --- Thông báo nổi (Toast) --- */
+.toast-message {
+    visibility: hidden;
+    min-width: 200px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 8px;
+    padding: 12px 16px;
+    position: fixed;
+    z-index: 9999;
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%) translateY(20px);
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.toast-message.show {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0); /* Hiệu ứng trượt nhẹ lên */
+}
+
+/* --- Tối ưu cho điện thoại --- */
+@media (max-width: 540px) {
+    #controls {
+        flex-direction: column; /* Đẩy các nút thành cột dọc */
+        /* gap: 0px; */
+    }
+    .action-buttons {
+        position: static; /* Gỡ bỏ neo phải để căn giữa theo cột */
+    }
+}

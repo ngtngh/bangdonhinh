@@ -218,10 +218,6 @@ function sanitizeInput(el) {
     el.value = el.value.replace(/[^0-9\.\-\/M]/g, '');
 }
 
-// function setDefaultZero(el) {
-//     if (el.value.trim() === '') el.value = '0';
-// }
-
 function generateInputGrid() {
     let rInput = document.getElementById('numRows');
     let cInput = document.getElementById('numCols');
@@ -275,16 +271,25 @@ function generateInputGrid() {
     html += `</table>`;
     
     document.getElementById('inputGridContainer').innerHTML = html;
-    document.getElementById('controls').style.display = 'block';
+    document.getElementById('controls').style.display = 'flex';
     document.getElementById('outputArea').innerHTML = '';
 }
 
 // --- 3. THUẬT TOÁN CỐT LÕI VÀ HIỂN THỊ ---
-function startSolving() {
+function startSolving(pushToHistory = true) {
     const output = document.getElementById('outputArea');
     output.innerHTML = '<h2>Quá trình giải</h2>';
     const numRows = parseInt(document.getElementById('numRows').value);
     const numCols = parseInt(document.getElementById('numCols').value);
+
+    // -- LƯU LỊCH SỬ TRÌNH DUYỆT --
+    if (pushToHistory) {
+        let state = getProblemState();
+        let encoded = btoa(encodeURIComponent(JSON.stringify(state)));
+        let newUrl = window.location.origin + window.location.pathname + "?data=" + encoded;
+        // Đẩy vào lịch sử duyệt web
+        window.history.pushState({ stateData: state }, '', newUrl);
+    }
     
     let T = { basicVars: [], nonBasicVars: [], c: [], b: [], A: [], f: null };
 
@@ -761,12 +766,146 @@ function renderTableau(T, iter, pRow, pCol) {
     output.innerHTML += html;
 }
 
-window.onload = function() { 
-    let savedRows = localStorage.getItem('simplex_rows');
-    let savedCols = localStorage.getItem('simplex_cols');
-    if (savedRows) document.getElementById('numRows').value = savedRows;
-    if (savedCols) document.getElementById('numCols').value = savedCols;
+// --- 4. LƯU TRỮ TRẠNG THÁI VÀ CHIA SẺ URL ---
 
-    let savedMode = localStorage.getItem('simplex_mode') || 'standard';
-    setMode(savedMode); 
+// Gom toàn bộ dữ liệu trên lưới thành một Object
+function getProblemState() {
+    let state = {
+        mode: currentMode,
+        rows: document.getElementById('numRows').value,
+        cols: document.getElementById('numCols').value,
+        inputs: {}
+    };
+    let container = document.getElementById('inputGridContainer');
+    let inputs = container.querySelectorAll('input[type="text"], input[type="checkbox"]');
+    inputs.forEach(inp => {
+        if (inp.type === 'checkbox') {
+            state.inputs[inp.id] = inp.checked;
+        } else {
+            state.inputs[inp.id] = inp.value;
+        }
+    });
+    return state;
+}
+
+// Khôi phục dữ liệu từ Object và tự động giải
+function loadProblemState(state) {
+    // 1. Cập nhật số hàng, cột và chế độ
+    document.getElementById('numRows').value = state.rows;
+    document.getElementById('numCols').value = state.cols;
+    setMode(state.mode); // Hàm này tự động gọi generateInputGrid() tạo lại bảng trắng
+
+    // 2. Bơm dữ liệu vào bảng
+    for (let id in state.inputs) {
+        let el = document.getElementById(id);
+        if (el) {
+            if (el.type === 'checkbox') {
+                el.checked = state.inputs[id];
+                // Kích hoạt lại giao diện ẩn giả
+                if (id.startsWith('chk_art_')) {
+                    let rowIdx = parseInt(id.split('_')[2]);
+                    toggleArtificial(rowIdx); 
+                }
+            } else {
+                el.value = state.inputs[id];
+            }
+        }
+    }
+    
+    // 3. Tự động giải luôn mà không lưu đè lịch sử URL
+    startSolving(false); 
+}
+
+// --- THÔNG BÁO TOAST MƯỢT MÀ ---
+function showToast(message) {
+    let toast = document.getElementById("toastNotification");
+    // Tự động tạo thẻ div chứa thông báo nếu chưa có
+    if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "toastNotification";
+        toast.className = "toast-message";
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.classList.add("show");
+    
+    // Xóa bộ đếm cũ nếu người dùng bấm liên tục
+    if(toast.timeoutId) clearTimeout(toast.timeoutId);
+    
+    // Tự động ẩn sau 2.5 giây
+    toast.timeoutId = setTimeout(function() { 
+        toast.classList.remove("show"); 
+    }, 2000);
+}
+
+// --- LÀM MỚI BÀI TOÁN ---
+function resetProblem() {
+    // 1. Dùng lại hàm setMode để tạo lưới trắng tinh tươm
+    setMode(currentMode); 
+    
+    // 2. Xóa vùng kết quả đang hiển thị
+    document.getElementById('outputArea').innerHTML = ''; 
+    
+    // 3. Xóa dữ liệu cũ trên thanh địa chỉ URL
+    let cleanUrl = window.location.origin + window.location.pathname;
+    window.history.pushState({}, '', cleanUrl);
+    
+    // showToast("Đã làm mới dữ liệu và URL!");
+}
+
+// Chức năng sao chép URL
+function copyShareLink() {
+    let state = getProblemState();
+    let encoded = btoa(encodeURIComponent(JSON.stringify(state))); 
+    let shareUrl = window.location.origin + window.location.pathname + "?data=" + encoded;
+    
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        showToast("🔗 Đã sao chép link bài toán!");
+    }).catch(err => {
+        showToast("Lỗi sao chép: " + err);
+    });
+}
+
+// --- 5. XỬ LÝ LỊCH SỬ TRÌNH DUYỆT VÀ URL ---
+
+// Kiểm tra xem URL hiện tại có chứa chuỗi bài toán hay không
+function checkUrlForData() {
+    let params = new URLSearchParams(window.location.search);
+    let data = params.get('data');
+    if (data) {
+        try {
+            let state = JSON.parse(decodeURIComponent(atob(data)));
+            loadProblemState(state);
+            return true; // Báo hiệu là đã có data trong link
+        } catch (e) {
+            console.error("Dữ liệu URL không hợp lệ hoặc bị hỏng", e);
+        }
+    }
+    return false;
+}
+
+// Bắt sự kiện khi người dùng bấm nút Back / Forward trên trình duyệt
+window.addEventListener('popstate', function(event) {
+    if (event.state && event.state.stateData) {
+        // Nếu trình duyệt có lưu trạng thái, khôi phục lại
+        loadProblemState(event.state.stateData);
+    } else {
+        // Kiểm tra lại trên URL
+        checkUrlForData();
+    }
+});
+
+// Chạy khi tải trang lần đầu
+window.onload = function() { 
+    // Thử load từ link chia sẻ trước. 
+    // Nếu KHÔNG có link chia sẻ, mới load thông số trống mặc định từ localStorage
+    if (!checkUrlForData()) {
+        let savedRows = localStorage.getItem('simplex_rows');
+        let savedCols = localStorage.getItem('simplex_cols');
+        if (savedRows) document.getElementById('numRows').value = savedRows;
+        if (savedCols) document.getElementById('numCols').value = savedCols;
+
+        let savedMode = localStorage.getItem('simplex_mode') || 'standard';
+        setMode(savedMode); 
+    }
 };

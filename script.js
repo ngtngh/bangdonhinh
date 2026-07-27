@@ -854,18 +854,25 @@ function resetProblem() {
 }
 
 // Chức năng sao chép URL
+function isMobileDevice() {
+    return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+        || (window.innerWidth <= 540);
+}
+
 function copyShareLink() {
     let state = getProblemState();
     let encoded = btoa(encodeURIComponent(JSON.stringify(state))); 
     let shareUrl = window.location.origin + window.location.pathname + "?data=" + encoded;
     
     navigator.clipboard.writeText(shareUrl).then(() => {
-        showToast("🔗 Đã sao chép link bài toán!");
+        // Chỉ hiện toast riêng nếu KHÔNG PHẢI điện thoại (để tránh trùng với thông báo của hệ điều hành)
+        if (!isMobileDevice()) {
+            showToast("🔗 Đã sao chép link bài toán!");
+        }
     }).catch(err => {
         showToast("Lỗi sao chép: " + err);
     });
 }
-
 // --- 5. XỬ LÝ LỊCH SỬ TRÌNH DUYỆT VÀ URL ---
 
 // Kiểm tra xem URL hiện tại có chứa chuỗi bài toán hay không

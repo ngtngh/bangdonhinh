@@ -11,8 +11,11 @@ function restoreValue(element) {
 }
 
 function updateClickCount() {
-    const button = document.getElementById('solveButton');
+    const solveButton = document.getElementById('solveButton');
+    // Giả sử nút Reset của bạn có id là 'resetButton', bạn đổi lại cho đúng id trong file HTML nhé
+    const resetButton = document.getElementById('resetButton'); 
     const countDisplay = document.getElementById('clickCount');
+    
     if (!countDisplay) return;
 
     const namespace = "ngtnghbangdonhinh";
@@ -27,35 +30,47 @@ function updateClickCount() {
         countDisplay.innerText = cachedCount;
     }
 
-    // 2. Tải số đếm mới nhất từ Server và cập nhật lại cache
-    fetch(getUrl)
-        .then(res => {
-            if (!res.ok) throw new Error("Chưa lấy được dữ liệu");
-            return res.json();
-        })
-        .then(data => {
-            if (data && typeof data.count === 'number') {
-                countDisplay.innerText = data.count;
-                localStorage.setItem('last_click_count', data.count); // Lưu cache
-            }
-        })
-        .catch(err => {
-            console.error("Lỗi khi tải số đếm:", err);
-        });
+    // --- TẠO HÀM ĐỌC DỮ LIỆU ĐỂ DÙNG CHUNG ---
+    const syncLatestCount = () => {
+        fetch(getUrl)
+            .then(res => {
+                if (!res.ok) throw new Error("Chưa lấy được dữ liệu");
+                return res.json();
+            })
+            .then(data => {
+                if (data && typeof data.count === 'number') {
+                    countDisplay.innerText = data.count;
+                    localStorage.setItem('last_click_count', data.count); // Lưu cache
+                }
+            })
+            .catch(err => console.error("Lỗi khi tải số đếm:", err));
+    };
+
+    // 2. Tải số đếm mới nhất từ Server khi vừa load trang
+    syncLatestCount();
 
     // 3. Tăng số đếm thực tế khi bấm nút "Giải Bảng Đơn Hình"
-    if (button && !button.dataset.counterBound) {
-        button.dataset.counterBound = "true"; // Tránh gán lặp lại sự kiện
-        button.addEventListener('click', () => {
+    if (solveButton && !solveButton.dataset.counterBound) {
+        solveButton.dataset.counterBound = "true";
+        solveButton.addEventListener('click', () => {
             fetch(hitUrl)
                 .then(res => res.json())
                 .then(data => {
                     if (data && typeof data.count === 'number') {
                         countDisplay.innerText = data.count;
-                        localStorage.setItem('last_click_count', data.count); // Cập nhật cache
+                        localStorage.setItem('last_click_count', data.count);
                     }
                 })
                 .catch(err => console.error("Lỗi khi cập nhật số đếm:", err));
+        });
+    }
+
+    // 4. MỚI: Đồng bộ lại số đếm khi bấm nút Reset
+    if (resetButton && !resetButton.dataset.counterBound) {
+        resetButton.dataset.counterBound = "true";
+        resetButton.addEventListener('click', () => {
+            // Chỉ gọi hàm đồng bộ, KHÔNG tăng biến đếm
+            syncLatestCount();
         });
     }
 }

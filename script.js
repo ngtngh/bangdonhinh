@@ -478,7 +478,7 @@ function startSolving(pushToHistory = true) {
 
                     if (validCols.length === 0) {
                         renderTableau(T, iteration, -1, -1);
-                        output.innerHTML += '<div class="status-infeasible">Tồn tại hàng xoay chứa các hệ số không âm. Hàm mục tiêu bài toán (P<sup>a</sup>) không bị chặn (Bài toán (P) vô nghiệm).</div>';   // Đơn hình đối ngẫu
+                        output.innerHTML += '<div class="status-infeasible">Tồn tại hàng xoay chứa các hệ số không âm. Hàm mục tiêu bài toán (P<sup>a</sup>) không bị chặn (Bài toán (P) VÔ NGHIỆM).</div>';   // Đơn hình đối ngẫu
                         break;
                     }
 
@@ -528,7 +528,7 @@ function startSolving(pushToHistory = true) {
                         output.innerHTML += '<div class="status-optimal">Cơ sở gốc khả dĩ và đối ngẫu khả dĩ. Tồn tại biến ngoài cơ sở có hệ số bằng 0. Bài toán (P<sup>a</sup>) có VÔ SỐ nghiệm tối ưu.</div>';   // Đơn hình đối ngẫu
                     } else {
                         if (hasArtificialInInitial && hasNonBasicArtificial) {
-                            output.innerHTML += '<div class="status-unbounded">Cơ sở gốc khả dĩ và đối ngẫu khả dĩ nhưng ẩn giả ngoài cơ sở. Hàm mục tiêu bài toán (P<sup>a</sup>) không bị chặn.</div>';   // Đơn hình đối ngẫu
+                            output.innerHTML += '<div class="status-unbounded">Cơ sở gốc khả dĩ và đối ngẫu khả dĩ nhưng ẩn giả ngoài cơ sở. Hàm mục tiêu bài toán (P) không bị chặn.</div>';   // Đơn hình đối ngẫu
                         } else {
                             output.innerHTML += '<div class="status-optimal">Cơ sở gốc khả dĩ và đối ngẫu khả dĩ. Kết luận nghiệm tối ưu của bài toán.</div>';   // Đơn hình đối ngẫu
                         }
@@ -585,13 +585,6 @@ function startSolving(pushToHistory = true) {
                     output.innerHTML += '<div class="status-optimal">Hệ số các biến ngoài cơ sở đều dương. Kết luận nghiệm tối ưu của bài toán.</div>';   // Đơn hình gốc
                 }
             } else {
-                let hasZeroDelta = false;
-                for(let j=0; j<T.c.length; j++) {
-                    if (T.c[j] !== null && isZeroVal(T.c[j])) {
-                        hasZeroDelta = true;
-                        break;
-                    }
-                }
                 let hasPositiveArtificial = false;
                 for(let i=0; i<T.basicVars.length; i++) {
                     if (T.basicVars[i].startsWith('v') && isPositiveVal(T.b[i])) {
@@ -599,14 +592,19 @@ function startSolving(pushToHistory = true) {
                         break;
                     }
                 }
-                if (hasZeroDelta) {
+                let hasZeroDelta = false;
+                for(let j=0; j<T.c.length; j++) {
+                    if (T.c[j] !== null && isZeroVal(T.c[j])) {
+                        hasZeroDelta = true;
+                        break;
+                    }
+                }
+                if (hasPositiveArtificial) {
+                    output.innerHTML += '<div class="status-infeasible">Hệ số các biến ngoài cơ sở đều dương. Tồn tại ẩn giả dương trong cơ sở. Bài toán (P) VÔ NGHIỆM.</div>';   // Đơn hình Big-M
+                } else if (hasZeroDelta) {
                     output.innerHTML += '<div class="status-optimal">Tồn tại biến ngoài cơ sở có hệ số bằng 0. Bài toán (P<sup>a</sup>) có VÔ SỐ nghiệm tối ưu.</div>';   // Đơn hình Big-M
                 } else {
-                    if (hasPositiveArtificial) {
-                        output.innerHTML += '<div class="status-infeasible">Hệ số các biến ngoài cơ sở đều dương. Tồn tại ẩn giả dương trong cơ sở. Bài toán (P) vô nghiệm.</div>';   // Đơn hình Big-M
-                    } else {
-                        output.innerHTML += '<div class="status-optimal">Hệ số các biến ngoài cơ sở đều dương.Mọi ẩn giả bằng 0. Kết luận nghiệm tối ưu của bài toán.</div>';   // Đơn hình Big-M
-                    }
+                    output.innerHTML += '<div class="status-optimal">Hệ số các biến ngoài cơ sở đều dương. Mọi ẩn giả bằng 0. Kết luận nghiệm tối ưu của bài toán.</div>';   // Đơn hình Big-M
                 }
             }
             break;
@@ -637,7 +635,7 @@ function startSolving(pushToHistory = true) {
                     }
                 }
                 if (hasPositiveArtificial) {
-                    output.innerHTML += '<div class="status-infeasible">Bài toán (P<sup>a</sup>) có hàm mục tiêu KHÔNG BỊ CHẶN. Tồn tại ẩn giả dương trong cơ sở. Bài toán (P) vô nghiệm.</div>';   // Đơn hình Big-M
+                    output.innerHTML += '<div class="status-infeasible">Bài toán (P<sup>a</sup>) có hàm mục tiêu KHÔNG BỊ CHẶN. Tồn tại ẩn giả dương trong cơ sở. Bài toán (P) VÔ NGHIỆM.</div>';   // Đơn hình Big-M
                 } else {
                     output.innerHTML += '<div class="status-unbounded">Bài toán (P<sup>a</sup>) có hàm mục tiêu KHÔNG BỊ CHẶN. Mọi ẩn giả bằng 0. Bài toán (P) có hàm mục tiêu cũng không bị chặn.</div>';   // Đơn hình Big-M
                 }

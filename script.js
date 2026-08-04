@@ -10,6 +10,56 @@ function restoreValue(element) {
     }
 }
 
+function updateClickCount() {
+    const button = document.getElementById('solveButton');
+    const countDisplay = document.getElementById('clickCount');
+    if (!countDisplay) return;
+
+    const namespace = "ngtnghbangdonhinh";
+    const key = "giaibangdonhinh";
+
+    const getUrl = `https://api.counterapi.dev/v1/${namespace}/${key}/`;
+    const hitUrl = `https://api.counterapi.dev/v1/${namespace}/${key}/up`;
+
+    // 1. Hiển thị NGAY LẬP TỨC con số từ lần truy cập trước (nếu có)
+    const cachedCount = localStorage.getItem('last_click_count');
+    if (cachedCount !== null) {
+        countDisplay.innerText = cachedCount;
+    }
+
+    // 2. Tải số đếm mới nhất từ Server và cập nhật lại cache
+    fetch(getUrl)
+        .then(res => {
+            if (!res.ok) throw new Error("Chưa lấy được dữ liệu");
+            return res.json();
+        })
+        .then(data => {
+            if (data && typeof data.count === 'number') {
+                countDisplay.innerText = data.count;
+                localStorage.setItem('last_click_count', data.count); // Lưu cache
+            }
+        })
+        .catch(err => {
+            console.error("Lỗi khi tải số đếm:", err);
+        });
+
+    // 3. Tăng số đếm thực tế khi bấm nút "Giải Bảng Đơn Hình"
+    if (button && !button.dataset.counterBound) {
+        button.dataset.counterBound = "true"; // Tránh gán lặp lại sự kiện
+        button.addEventListener('click', () => {
+            fetch(hitUrl)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && typeof data.count === 'number') {
+                        countDisplay.innerText = data.count;
+                        localStorage.setItem('last_click_count', data.count); // Cập nhật cache
+                    }
+                })
+                .catch(err => console.error("Lỗi khi cập nhật số đếm:", err));
+        });
+    }
+}
+
 function setMode(mode) {
     localStorage.setItem('simplex_mode', mode);
     currentMode = mode;
@@ -914,7 +964,8 @@ window.addEventListener('popstate', function(event) {
 });
 
 // Chạy khi tải trang lần đầu
-window.onload = function() { 
+window.onload = function() {
+    updateClickCount();
     // Thử load từ link chia sẻ trước. 
     // Nếu KHÔNG có link chia sẻ, mới load thông số trống mặc định từ localStorage
     if (!checkUrlForData()) {

@@ -12,7 +12,6 @@ function restoreValue(element) {
 
 function updateClickCount() {
     const solveButton = document.getElementById('solveButton');
-    // Giả sử nút Reset của bạn có id là 'resetButton', bạn đổi lại cho đúng id trong file HTML nhé
     const resetButton = document.getElementById('resetButton'); 
     const countDisplay = document.getElementById('clickCount');
     
@@ -21,10 +20,10 @@ function updateClickCount() {
     const namespace = "ngtnghbangdonhinh";
     const key = "giaibangdonhinh";
 
-    const getUrl = `https://api.counterapi.dev/v1/${namespace}/${key}/`;
-    const hitUrl = `https://api.counterapi.dev/v1/${namespace}/${key}/up`;
+    const getUrl = `https://api.counterapi.dev/v2/${namespace}/${key}/`;
+    const hitUrl = `https://api.counterapi.dev/v2/${namespace}/${key}/up`;
 
-    // 1. Hiển thị NGAY LẬP TỨC con số từ lần truy cập trước (nếu có)
+    // 1. Hiển thị con số từ lần truy cập trước
     const cachedCount = localStorage.getItem('last_click_count');
     if (cachedCount !== null) {
         countDisplay.innerText = cachedCount;
@@ -65,7 +64,7 @@ function updateClickCount() {
         });
     }
 
-    // 4. MỚI: Đồng bộ lại số đếm khi bấm nút Reset
+    // 4. Đồng bộ lại số đếm khi bấm nút Reset
     if (resetButton && !resetButton.dataset.counterBound) {
         resetButton.dataset.counterBound = "true";
         resetButton.addEventListener('click', () => {

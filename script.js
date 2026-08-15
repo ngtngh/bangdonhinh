@@ -10,6 +10,71 @@ function restoreValue(element) {
     }
 }
 
+function updateClickCount() {
+    const solveButton = document.getElementById('solveButton');
+    const resetButton = document.getElementById('resetButton'); 
+    const countDisplay = document.getElementById('clickCount');
+
+    if (!countDisplay) return;
+
+    const namespace = "ngtnghbangdonhinh";
+    const key = "giaibangdonhinh";
+
+    const getUrl = `https://api.counterapi.dev/v2/${namespace}/${key}`;
+    const hitUrl = `https://api.counterapi.dev/v2/${namespace}/${key}/up`;
+
+    // 1. Hiển thị con số từ lần truy cập trước
+    const cachedCount = localStorage.getItem('last_click_count');
+    if (cachedCount !== null) {
+        countDisplay.innerText = cachedCount;
+    }
+
+    // --- TẠO HÀM ĐỌC DỮ LIỆU ĐỂ DÙNG CHUNG ---
+    const syncLatestCount = () => {
+        const noCacheGetUrl = `${getUrl}?t=${new Date().getTime()}`;
+
+        fetch(noCacheGetUrl, { cache: 'no-store' })
+            .then(res => {
+                if (!res.ok) throw new Error("Chưa lấy được dữ liệu");
+                return res.json();
+            })
+            .then(response => {
+                if (response && response.data && typeof response.data.up_count === 'number') {
+                    const count = response.data.up_count;
+                    countDisplay.innerText = count;
+                    localStorage.setItem('last_click_count', count);
+                }
+            })
+            .catch(err => console.error("Lỗi khi tải số đếm:", err));
+    };
+
+    // 2. Tải số đếm mới nhất từ Server khi vừa load trang
+    syncLatestCount();
+
+    // 3. Tăng số đếm thực tế khi bấm nút "Giải Bảng Đơn Hình"
+    if (solveButton && !solveButton.dataset.counterBound) {
+        solveButton.dataset.counterBound = "true";
+        solveButton.addEventListener('click', () => {
+            const noCacheHitUrl = `${hitUrl}?t=${new Date().getTime()}`;
+
+            fetch(noCacheHitUrl, { cache: 'no-store' })
+                .then(res => {
+                    if (!res.ok) throw new Error(`Lỗi HTTP: ${res.status}`);
+                    syncLatestCount();
+                })
+                .catch(err => console.error("Lỗi khi cập nhật số đếm:", err));
+        });
+    }
+
+    // 4. Đồng bộ lại số đếm khi bấm nút Reset
+    if (resetButton && !resetButton.dataset.counterBound) {
+        resetButton.dataset.counterBound = "true";
+        resetButton.addEventListener('click', () => {
+            syncLatestCount();
+        });
+    }
+}
+
 function setMode(mode) {
     localStorage.setItem('simplex_mode', mode);
     currentMode = mode;
@@ -924,6 +989,9 @@ window.addEventListener('popstate', function(event) {
 
 // Chạy khi tải trang lần đầu
 window.onload = function() {
+    updateClickCount();
+    // Thử load từ link chia sẻ trước. 
+    // Nếu KHÔNG có link chia sẻ, mới load thông số trống mặc định từ localStorage
     if (!checkUrlForData()) {
         let savedRows = localStorage.getItem('simplex_rows');
         let savedCols = localStorage.getItem('simplex_cols');
